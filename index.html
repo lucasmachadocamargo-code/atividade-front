@@ -1,124 +1,161 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tema 8 - Parque de Diversões Interativo</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parque de Diversões Interativo - Tema 8</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <header class="topo">
-    <h1>🎡 Parque de Diversões TechPark</h1>
-    <button id="btn-emergencia" class="btn-emergencia">🚨 PARADA DE EMERGÊNCIA</button>
+    <div>
+      <h1>🎡 Parque de Diversões Interativo</h1>
+      <p>Painel de Controle e Simulação de Brinquedos</p>
+    </div>
+    <div class="acoes-globais">
+      <button id="btn-reiniciar" class="btn btn-secundario">🔄 Reiniciar Parque</button>
+      <button id="btn-emergencia" class="btn btn-emergencia">🚨 PARADA DE EMERGÊNCIA</button>
+    </div>
   </header>
 
-  <div id="alerta-emergencia" class="alerta-oculto">
-    ⚠️ SISTEMA EM MODO DE EMERGÊNCIA! Todos os brinquedos foram bloqueados.
-    <button id="btn-resetar" class="btn-resetar">Resetar Sistema</button>
-  </div>
+  <main class="container">
+    <!-- CENÁRIO PRINCIPAL -->
+    <section id="cenario" aria-label="Cenário do Parque de Diversões">
+      <div class="sol"></div>
+      <div class="nuvem nuvem-1"></div>
+      <div class="nuvem nuvem-2"></div>
 
-  <!-- CENÁRIO DO PARQUE -->
-  <main class="cenario">
-    <div class="sol"></div>
-    <div class="nuvem nuvem-1"></div>
-    <div class="nuvem nuvem-2"></div>
-
-    <div class="area-brinquedos">
       <!-- BRINQUEDO 1: RODA-GIGANTE -->
-      <section class="brinquedo-box">
-        <h2>Roda-Gigante</h2>
-        <div class="roda-container">
-          <div class="roda-base"></div>
-          <div id="roda-aro" class="roda-aro">
-            <div class="raio r1"></div>
-            <div class="raio r2"></div>
-            <div class="raio r3"></div>
-            <div class="raio r4"></div>
-          </div>
-          <div id="cabines-container"></div>
+      <div id="roda-gigante" class="brinquedo">
+        <div class="suporte-roda suporte-esq"></div>
+        <div class="suporte-roda suporte-dir"></div>
+        <div id="roda-aro">
+          <div class="raio raio-1"></div>
+          <div class="raio raio-2"></div>
+          <div class="raio raio-3"></div>
+          <div class="raio raio-4"></div>
         </div>
-      </section>
+        <div id="roda-cabines"></div>
+        <div class="eixo-central"></div>
+        <span class="placa-brinquedo">Roda-Gigante</span>
+      </div>
 
       <!-- BRINQUEDO 2: CARROSSEL -->
-      <section class="brinquedo-box">
-        <h2>Carrossel Encantado</h2>
-        <div class="carrossel-container">
-          <div class="carrossel-teto"></div>
-          <div class="carrossel-mastro"></div>
-          <div id="cavalos-container" class="cavalos-area"></div>
-          <div class="carrossel-base"></div>
-        </div>
-      </section>
+      <div id="carrossel" class="brinquedo">
+        <div class="teto-carrossel"></div>
+        <div class="haste-central"></div>
+        <div id="carrossel-cavalos"></div>
+        <div class="base-carrossel"></div>
+        <span class="placa-brinquedo">Carrossel</span>
+      </div>
 
       <!-- BRINQUEDO 3: MONTANHA-RUSSA -->
-      <section class="brinquedo-box montanha-box">
-        <h2>Montanha-Russa</h2>
-        <div class="montanha-container">
-          <svg viewBox="0 0 420 180" class="trilho-svg">
-            <!-- Pilares de sustentação -->
-            <line x1="110" y1="45" x2="110" y2="165" class="pilar" />
-            <line x1="180" y1="90" x2="180" y2="165" class="pilar" />
-            <line x1="280" y1="42" x2="280" y2="165" class="pilar" />
-            <line x1="355" y1="75" x2="355" y2="165" class="pilar" />
-            <!-- Trilho contínuo -->
-            <path id="trilho-path"
-              d="M 40,145 C 40,40 130,20 180,90 C 230,160 280,20 350,65 C 400,95 390,155 320,155 L 90,155 C 50,155 40,150 40,145 Z"
-              fill="none" stroke="#334155" stroke-width="5" />
-          </svg>
-          <div id="carrinhos-container"></div>
+      <div id="montanha-russa" class="brinquedo">
+        <svg id="trilho-svg" viewBox="0 0 340 200">
+          <!-- Pilares gerados via JS -->
+          <g id="pilares-montanha"></g>
+          <!-- Trilho em formato de onda -->
+          <path
+            d="M 0 130 Q 85 20, 170 130 T 340 130"
+            fill="none"
+            stroke="#374151"
+            stroke-width="6"
+          />
+          <path
+            d="M 0 130 Q 85 20, 170 130 T 340 130"
+            fill="none"
+            stroke="#f59e0b"
+            stroke-width="2"
+            stroke-dasharray="6,6"
+          />
+        </svg>
+        <div id="carrinhos-container"></div>
+        <div class="tunel tunel-esq"></div>
+        <div class="tunel tunel-dir"></div>
+        <span class="placa-brinquedo">Montanha-Russa</span>
+      </div>
+
+      <!-- CHÃO E VISITANTES -->
+      <div class="gramado"></div>
+      <div class="calcada"></div>
+      <div id="visitantes-container"></div>
+    </section>
+
+    <!-- CONTROLES INDIVIDUAIS E PAINEL DE FUNCIONAMENTO -->
+    <section class="paineis">
+      <!-- Controles Individuais -->
+      <div class="card-controles">
+        <h2>🎛️ Controles Individuais</h2>
+
+        <div class="controle-item">
+          <div class="controle-cabecalho">
+            <strong>🎡 Roda-Gigante</strong>
+            <button id="btn-roda" class="btn btn-ativo">Pausar</button>
+          </div>
+          <label for="vel-roda">Velocidade: <span id="txt-vel-roda">1.0x</span></label>
+          <input type="range" id="vel-roda" min="0.5" max="3" step="0.5" value="1" />
         </div>
-      </section>
-    </div>
 
-    <!-- CALÇADÃO E VISITANTES -->
-    <div class="gramado">
-      <div id="calcadao" class="calcadao"></div>
-    </div>
+        <div class="controle-item">
+          <div class="controle-cabecalho">
+            <strong>🎠 Carrossel</strong>
+            <button id="btn-carrossel" class="btn btn-ativo">Pausar</button>
+          </div>
+          <label for="vel-carrossel">Velocidade: <span id="txt-vel-carrossel">1.0x</span></label>
+          <input type="range" id="vel-carrossel" min="0.5" max="3" step="0.5" value="1" />
+        </div>
+
+        <div class="controle-item">
+          <div class="controle-cabecalho">
+            <strong>🎢 Montanha-Russa</strong>
+            <button id="btn-montanha" class="btn btn-ativo">Pausar</button>
+          </div>
+          <label for="vel-montanha">Velocidade: <span id="txt-vel-montanha">1.0x</span></label>
+          <input type="range" id="vel-montanha" min="0.5" max="3" step="0.5" value="1" />
+        </div>
+      </div>
+
+      <!-- Painel de Funcionamento -->
+      <div class="card-status">
+        <h2>📊 Painel de Funcionamento</h2>
+        <div id="painel-geral-status" class="alerta-status status-ok">
+          Sistema Operando Normalmente
+        </div>
+
+        <table class="tabela-status">
+          <thead>
+            <tr>
+              <th>Brinquedo</th>
+              <th>Estado</th>
+              <th>Velocidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Roda-Gigante</td>
+              <td id="status-roda">Em operação</td>
+              <td id="info-vel-roda">1.0x</td>
+            </tr>
+            <tr>
+              <td>Carrossel</td>
+              <td id="status-carrossel">Em operação</td>
+              <td id="info-vel-carrossel">1.0x</td>
+            </tr>
+            <tr>
+              <td>Montanha-Russa</td>
+              <td id="status-montanha">Em operação</td>
+              <td id="info-vel-montanha">1.0x</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="info-extra">
+          <p><strong>Visitantes no parque:</strong> <span id="total-visitantes">0</span> pessoas</p>
+          <p><strong>Último evento:</strong> <span id="log-sistema">Parque aberto ao público.</span></p>
+        </div>
+      </div>
+    </section>
   </main>
-
-  <!-- CONTROLES INDIVIDUAIS E PAINEL DE FUNCIONAMENTO -->
-  <section class="painel-geral">
-    <div class="controles-grid">
-      <!-- Controle Roda-Gigante -->
-      <div class="card-controle">
-        <h3>🎡 Roda-Gigante</h3>
-        <p>Status: <span id="status-roda" class="badge ativo">Ativo</span></p>
-        <label>Velocidade: <span id="val-vel-roda">2</span>x</label>
-        <input type="range" id="vel-roda" min="1" max="5" value="2">
-        <button id="toggle-roda" class="btn-controle">Pausar</button>
-      </div>
-
-      <!-- Controle Carrossel -->
-      <div class="card-controle">
-        <h3>🎠 Carrossel</h3>
-        <p>Status: <span id="status-carrossel" class="badge ativo">Ativo</span></p>
-        <label>Velocidade: <span id="val-vel-carrossel">3</span>x</label>
-        <input type="range" id="vel-carrossel" min="1" max="5" value="3">
-        <button id="toggle-carrossel" class="btn-controle">Pausar</button>
-      </div>
-
-      <!-- Controle Montanha-Russa -->
-      <div class="card-controle">
-        <h3>🎢 Montanha-Russa</h3>
-        <p>Status: <span id="status-montanha" class="badge ativo">Ativo</span></p>
-        <label>Velocidade: <span id="val-vel-montanha">4</span>x</label>
-        <input type="range" id="vel-montanha" min="1" max="5" value="4">
-        <button id="toggle-montanha" class="btn-controle">Pausar</button>
-      </div>
-    </div>
-
-    <!-- PAINEL DE FUNCIONAMENTO -->
-    <aside class="painel-status">
-      <h3>📊 Painel de Funcionamento</h3>
-      <ul>
-        <li><strong>Estado Geral:</strong> <span id="info-sistema">Operação Normal</span></li>
-        <li><strong>Brinquedos Ativos:</strong> <span id="info-ativos">3 de 3</span></li>
-        <li><strong>Visitantes no Parque:</strong> <span id="info-visitantes">0</span></li>
-        <li><strong>Voltas Roda-Gigante:</strong> <span id="info-voltas">0</span></li>
-      </ul>
-    </aside>
-  </section>
 
   <script src="script.js"></script>
 </body>
