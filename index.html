@@ -1,267 +1,1733 @@
-<!DOCTYPE html >
-< html lang = "pt-BR" >
-< cabeçalho >
-< meta charset = "UTF-8" />
-< meta name = "viewport" content = "width=device-width, initial-scale=1.0" />
-<title>Parque de Diversões Simples</title>
-<!-- Tailwind CSS para estilização responsiva dos controles -->
-< script src = " https://cdn.tailwindcss.com&quot; > </script>
-< link rel = "preconnect" href = "https://fonts.googleapis.com&quot; />
-< link rel = "preconnect" href = "https://fonts.gstatic.com&quot; crossorigin />
-< link href = "https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap&quot; rel = "stylesheet" />
-</head>​​
-< body class = "m-0 p-0 overflow-hidden bg-slate-900 font-['Inter',sans-serif] select-none" >
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parque de Diversões Animado</title>
+    <!-- Carregando Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontes Google: Fredoka para títulos lúdicos e Inter para controles limpos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #1e293b;
+        }
+        .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        /* Estilização customizada do controle deslizante de velocidade */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.35);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -5px;
+            background-color: #f59e0b;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        @keyframes floatBadge {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+        .animate-float-slow {
+            animation: floatBadge 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="relative w-full h-full overflow-hidden">
 
-<!-- Tela principal da animação -->
-< canvas id = "parque" class = "block w - screen h-screen" > </canvas>
+    <!-- Canvas principal onde toda a cena do parque é desenhada em 60 FPS -->
+    <canvas id="parkCanvas"></canvas>
 
-<!-- Botões de controle responsivos -->
-< div class = "fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-3 w-full max-w-md px-4" >
-< botão
-id = "btnTema"
-tipo = "botão"
-class = "px-5 py-3 rounded-full font-bold text-sm text-white bg-orange-500 hover:bg-orange-600 active:scale-95 shadow-lg transition transform cursor-pointer"
->
-🌙 Noite / Dia
-</ botão >
-< botão
-id = "btnPausar"
-tipo = "botão"
-class = "px-5 py-3 rounded-full font-bold text-sm text-white bg-emerald-500 hover:bg-emerald-600 active:scale-95 shadow-lg transition transform cursor-pointer"
->
-⏸️ Pausar
-</ botão >
-</div>​​
+    <!-- Cabeçalho flutuante discreto no canto superior esquerdo -->
+    <header class="fixed top-3 left-3 sm:top-5 sm:left-5 z-20 pointer-events-none flex flex-col gap-1.5">
+        <div id="titleCard" class="pointer-events-auto inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/85 backdrop-blur-md shadow-lg border border-white/60 transition-colors duration-500">
+            <span class="text-2xl animate-float-slow" aria-hidden="true">🎡</span>
+            <div>
+                <h1 id="parkTitle" class="font-display text-base sm:text-xl font-bold tracking-tight text-slate-800 leading-tight transition-colors duration-500">
+                    Parque Alegria
+                </h1>
+                <p id="parkSubtitle" class="text-[11px] sm:text-xs text-slate-600 font-medium transition-colors duration-500">
+                    Toque no céu para fogos ou nos balões!
+                </p>
+            </div>
+        </div>
+    </header>
 
-< script >
-const canvas = document.getElementById( 'parque' );
-const ctx = canvas.getContext( '2d' );
+    <!-- Painel de Controles Interativos no canto superior direito -->
+    <aside class="fixed top-3 right-3 sm:top-5 sm:right-5 z-20 flex flex-col items-end gap-2 max-w-[calc(100vw-1.5rem)]">
+        <!-- Botão para recolher/expandir painel em telas menores -->
+        <button id="togglePanelBtn" type="button" aria-label="Alternar painel de controles"
+            class="sm:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/90 text-slate-800 font-semibold text-xs shadow-lg backdrop-blur-md border border-white/60 active:scale-95 transition">
+            <span>⚙️</span>
+            <span>Controles</span>
+        </button>
 
-// Estado simples da animação
-seja tempo = 0 ;
-let noite = false;
-let pausado = false;
+        <div id="controlsPanel" class="w-64 sm:w-72 p-3.5 sm:p-4 rounded-2xl bg-white/88 backdrop-blur-md shadow-xl border border-white/60 transition-all duration-500 flex flex-col gap-3">
+            <!-- Linha 1: Alternar Dia / Noite e Som -->
+            <div class="flex items-center gap-2">
+                <button id="themeToggleBtn" type="button"
+                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-md active:scale-95 transition cursor-pointer">
+                    <span id="themeIcon" class="text-base">🌙</span>
+                    <span id="themeLabel">Modo Noite</span>
+                </button>
 
-// Ajusta o tamanho do canvas para preencher qualquer tela
-function redimensionar() {
-canvas.width = window.innerWidth;
-altura da tela = altura da janela.altura interna;
-}
-janela.adicionarOuvinteDeEvento( 'redimensionar' , redimensionar);
-redimensionar();
+                <button id="soundToggleBtn" type="button" title="Ativar ou desativar efeitos sonoros"
+                    class="p-2.5 rounded-xl bg-slate-200/80 hover:bg-slate-300/80 text-slate-700 font-semibold text-sm shadow-sm active:scale-95 transition cursor-pointer"
+                    aria-label="Alternar som">
+                    <span id="soundIcon">🔇</span>
+                </button>
+            </div>
 
-// Eventos dos botões de interação
-document.getElementById( 'btnTema' ).addEventListener( 'click' , () => {
-noite = !noite;
-});
+            <!-- Linha 2: Botão para Lançar Fogos de Artifício -->
+            <button id="fireworksBtn" type="button"
+                class="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-white bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:brightness-110 shadow-md active:scale-95 transition cursor-pointer">
+                <span class="text-base">🎆</span>
+                <span>Lançar Fogos de Artifício</span>
+            </button>
 
-document.getElementById( 'btnPausar' ).addEventListener( 'click' , (e) => {
-pausado = !pausado;
-e.currentTarget.textContent = pausado ? '▶️ Continuar' : '⏸️ Pausar';
-});
+            <!-- Linha 3: Controle de Velocidade dos Brinquedos -->
+            <div id="speedBox" class="p-2.5 rounded-xl bg-slate-100/80 border border-slate-200/70 transition-colors duration-500">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="speedSlider" id="speedLabelText" class="text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-colors duration-500">
+                        <span>⚡</span>
+                        <span>Velocidade dos Brinquedos</span>
+                    </label>
+                    <span id="speedValue" class="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700">
+                        1.0x
+                    </span>
+                </div>
+                <input id="speedSlider" type="range" min="0" max="2.5" step="0.1" value="1.0" class="w-full">
+                <div class="flex justify-between text-[10px] font-medium text-slate-500 mt-1">
+                    <button type="button" class="speed-preset hover:text-amber-600 cursor-pointer" data-speed="0">Pausar</button>
+                    <button type="button" class="speed-preset hover:text-amber-600 cursor-pointer" data-speed="1">Normal</button>
+                    <button type="button" class="speed-preset hover:text-amber-600 cursor-pointer" data-speed="2.2">Turbo</button>
+                </div>
+            </div>
+        </div>
+    </aside>
 
-// 1. Cenário: Céu, Sol/Lua, Nuvens e Gramado
-function desenharCenario() {
-ctx.fillStyle = noite ? '#0f172a' : '#7dd3fc';
-ctx.fillRect( 0 , 0 , 800 , 500 );
+    <!-- Notificação flutuante sutil (substitui qualquer alert) -->
+    <div id="toastMessage" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 transition-opacity duration-300 px-4 py-2 rounded-full bg-slate-900/85 text-white text-xs sm:text-sm font-medium shadow-lg backdrop-blur-sm">
+        🎆 Show de fogos iniciado!
+    </div>
 
-// Sol ou Lua
-ctx.fillStyle = noite ? '#fef08a' : '#facc15';
-ctx.beginPath();
-ctx.arc( 690 , 75 , 32 , 0 , Math . PI * 2 );
-ctx.fill();
+    <script>
+        /**
+         * PARQUE DE DIVERSÕES ANIMADO
+         * Renderização procedural completa em HTML5 Canvas 2D com física de montanha-russa,
+         * iluminação dinâmica Dia/Noite, fogos de artifício com partículas e áudio sintetizado opcional.
+         */
+        (function () {
+            'use strict';
 
-// Nuvens em movimento suave
-ctx.fillStyle = noite ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.85)';
-para ( seja i = 0 ; i < 3 ; i++) {
-const x = ((tempo * 20 + i * 280 ) % 920 ) - 60 ;
-const y = 60 + i * 28 ;
-ctx.beginPath();
-ctx.arc ( x , y, 22 , 0 , Math.PI * 2 );
-ctx.arc(x + 22 , y - 5 , 26 , 0 , Math . PI * 2 );
-ctx.arc(x + 45 , y, 20 , 0 , Math . PI * 2 );
-ctx.fill();
-}
+            // =========================================================================
+            // 1. CONFIGURAÇÃO DO CANVAS E ESTADO GLOBAL
+            // =========================================================================
+            const canvas = document.getElementById('parkCanvas');
+            const ctx = canvas.getContext('2d');
 
-// Gramado e calçada do parque
-ctx.fillStyle = noite ? '#14532d' : '#4ade80';
-ctx.fillRect( 0 , 360 , 800 , 140 );
-ctx.fillStyle = noite ? '#334155' : '#fde68a';
-ctx.fillRect( 0 , 415 , 800 , 85 );
-}
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-// 2. Roda Gigante girando com 8 cabines coloridas
-function desenharRodaGigante(cx, cy, raio) {
-// Pernas de sustentação
-ctx.strokeStyle = '#e11d48' ;
-ctx.lineWidth = 6 ;
-ctx.beginPath();
-ctx.moveTo(cx, cy);
-ctx.lineTo(cx - 65 , 415 );
-ctx.moveTo(cx, cy);
-ctx.lineTo(cx + 65 , 415 );
-ctx.stroke();
+            const state = {
+                isNight: false,
+                nightFactor: 0, // 0 = Dia pleno, 1 = Noite plena (interpolado suavemente)
+                rideSpeed: 1.0,
+                time: 0,
+                wheelAngle: 0,
+                carouselPhase: 0,
+                coasterDistance: 0,
+                coasterVelocity: 0.16,
+                autoFireworkTimer: 0,
+                soundEnabled: false
+            };
 
-// Anel externo
-ctx.strokeStyle = '#f59e0b' ;
-ctx.lineWidth = 5 ;
-ctx.beginPath();
-ctx.arc ( cx , cy, raio, 0 , Math.PI * 2 );
-ctx.stroke();
+            // Coleções de entidades dinâmicas
+            let clouds = [];
+            let stars = [];
+            let balloons = [];
+            let fireworks = [];
+            let particles = [];
+            let popcornPops = [];
+            let coasterLUT = []; // Tabela de comprimento de arco para a montanha-russa
 
-// Raios e cabines
-const cores = [ '#ef4444' , '#3b82f6' , '#10b981' , '#a855f7' ];
-para ( seja i = 0 ; i < 8 ; i++) {
-const ângulo = tempo * 0.6 + (i * Math.PI ) / 4 ;
-const x = cx + Math.cos (ângulo) * raio;
-const y = cy + Math.sin (ângulo) * raio;
+            // Paleta de cores vibrantes do parque
+            const PALETTE = {
+                cabins: ['#FF595E', '#FFCA3A', '#8AC926', '#1982C4', '#6A4C93', '#FF924C'],
+                balloons: ['#FF4D6D', '#FFD166', '#06D6A0', '#118AB2', '#C77DFF', '#FF9F1C', '#4CC9F0'],
+                flags: ['#FF595E', '#FFCA3A', '#8AC926', '#1982C4', '#FF924C', '#B5179E'],
+                lights: ['#FFF3B0', '#FF595E', '#4CC9F0', '#8AC926', '#FFCA3A', '#F72585']
+            };
 
-ctx.strokeStyle = '#fbbf24' ;
-ctx.lineWidth = 2 ;
-ctx.beginPath();
-ctx.moveTo(cx, cy);
-ctx.lineTo(x, y);
-ctx.stroke();
+            // =========================================================================
+            // 2. SISTEMA DE ÁUDIO PROCEDURAL (WEB AUDIO API - SEM URLS EXTERNAS)
+            // =========================================================================
+            let audioCtx = null;
 
-// Cabana
-ctx.fillStyle = cores[i % cores.length];
-ctx.fillRect(x - 10 , y, 20 , 14 );
-}
-}
+            function initAudio() {
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) {
+                        audioCtx = new AudioContextClass();
+                    }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
 
-// 3. Montanha-Russa com carrinho seguindo a inclinação da pista
-function desenharMontanhaRussa() {
-const alturaTrilho = (x) => 310 - Math .sin(x * 0.015 ) * 65 ;
+            function playPopSound() {
+                if (!state.soundEnabled || !audioCtx) return;
+                try {
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(780, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.09);
+                } catch (e) { /* Ignora falhas de áudio */ }
+            }
 
-// Pilares de apoio
-ctx.strokeStyle = '#64748b' ;
-ctx.lineWidth = 2 ;
-para ( seja x = 20 ; x < 430 ; x += 35 ) {
-ctx.beginPath();
-ctx.moveTo(x, alturaTrilho(x));
-ctx.lineTo(x, 415 );
-ctx.stroke();
-}
+            function playFireworkSound() {
+                if (!state.soundEnabled || !audioCtx) return;
+                try {
+                    const now = audioCtx.currentTime;
+                    // Ruído branco filtrado para simular o estouro distante dos fogos
+                    const bufferSize = audioCtx.sampleRate * 0.45;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.12));
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
 
-// Trilho ondulado
-ctx.strokeStyle = '#ef4444' ;
-ctx.lineWidth = 5 ;
-ctx.beginPath();
-para ( seja x = 0 ; x <= 440 ; x += 5 ) {
-const y = trackHeight(x);
-se (x === 0 ) {
-ctx.moveTo(x, y);
-} outro {
-ctx.lineTo(x, y);
-}
-}
-ctx.stroke();
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(650, now);
+                    filter.frequency.exponentialRampToValueAtTime(120, now + 0.45);
 
-// Carrinho em movimento acompanhando a curva
-const carX = (tempo * 95 ) % 420 ;
-const carY = alturaTrilha(carX) - 8 ;
-const inclinacao = Math .atan2(alturaTrilho(carX + 2 ) - alturaTrilho(carX), 2 );
+                    const gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
 
-ctx.save();
-ctx.translate(carX, carY);
-ctx.rotate(inclinação);
-ctx.fillStyle = '#2563eb' ;
-ctx.fillRect( -18 , -8 , 36 , 14 );
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    noise.start(now);
+                } catch (e) { /* Ignora falhas de áudio */ }
+            }
 
-// Passageiros
-ctx.fillStyle = '#facc15' ;
-ctx.beginPath();
-ctx.arc ( -6 , -12 , 4 , 0 , Math.PI * 2 ) ;
-ctx.arc( 7 , - 12 , 4 , 0 , Math . PI * 2 );
-ctx.fill();
-ctx.restore();
-}
+            // =========================================================================
+            // 3. FUNÇÕES UTILITÁRIAS E INTERPOLAÇÃO
+            // =========================================================================
+            function lerp(a, b, t) {
+                return a + (b - a) * t;
+            }
 
-// 4. Carrossel Mágico com cavalinhos subindo e descendo
-função desenharCarrossel(cx, baseY) {
-// Base e teto
-ctx.fillStyle = '#f59e0b' ;
-ctx.fillRect(cx - 75 , baseY - 12 , 150 , 12 );
+            function clamp(val, min, max) {
+                return Math.max(min, Math.min(max, val));
+            }
 
-ctx.fillStyle = '#ec4899' ;
-ctx.beginPath();
-ctx.moveTo(cx, baseY - 135 );
-ctx.lineTo(cx - 85 , baseY - 90 );
-ctx.lineTo(cx + 85 , baseY - 90 );
-ctx.closePath();
-ctx.fill();
+            function lerpColor(rgb1, rgb2, t) {
+                const r = Math.round(lerp(rgb1[0], rgb2[0], t));
+                const g = Math.round(lerp(rgb1[1], rgb2[1], t));
+                const b = Math.round(lerp(rgb1[2], rgb2[2], t));
+                return `rgb(${r}, ${g}, ${b})`;
+            }
 
-// 3 cavalinhos animados
-para ( seja i = 0 ; i < 3 ; i++) {
-const ang = tempo * 2 + (em * Math.FOR * 2 ) / 3 ;
-const x = cx + Math.cos (ang) * 48 ;
-const y = baseY - 42 + Math.sin (time * 5 + i) * 10 ;
+            let toastTimeout = null;
+            function showToast(text) {
+                const toast = document.getElementById('toastMessage');
+                if (!toast) return;
+                toast.textContent = text;
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                }, 2200);
+            }
 
-ctx.strokeStyle = '#fbbf24' ;
-ctx.lineWidth = 3 ;
-ctx.beginPath();
-ctx.moveTo(x, baseY - 90 );
-ctx.lineTo(x, baseY - 12 );
-ctx.stroke();
+            // =========================================================================
+            // 4. INICIALIZAÇÃO DO CENÁRIO E TABELA DA MONTANHA-RUSSA
+            // =========================================================================
+            function getGroundY() {
+                return height * 0.84;
+            }
 
-ctx.fillStyle = i % 2 === 0 ? '#38bdf8' : '#c084fc' ;
-ctx.fillRect(x - 12 , y - 8 , 24 , 14 );
-}
-}
+            /**
+             * Define a curva paramétrica da montanha-russa com subida inicial,
+             * grande queda, looping vertical completo e morros de emoção.
+             */
+            function evalCoasterRaw(u) {
+                const groundY = getGroundY();
+                const startX = -width * 0.06;
+                const endX = width * 1.06;
+                const spanX = endX - startX;
+                const maxClimb = Math.min(height * 0.36, 290);
+                const baseTrackY = groundY - Math.min(height * 0.05, 36);
 
-// 5. Mascote EMA TRO acenando
-function desenharMascote(x, y) {
-const aceno = Math.sin(tempo * 6) * 0.4;
-ctx.save();
-ctx.translate(x, y);
+                // Parâmetros do looping vertical central
+                const loopCenterX = width * 0.50;
+                const loopRadius = Math.min(width * 0.075, height * 0.115, 78);
+                const loopCenterY = baseTrackY - loopRadius - 12;
 
-// Asa esquerda acenando
-ctx.save();
-ctx.translate(- 14 , - 4 );
-ctx.rotate(-0.7 + aceno);
-ctx.fillStyle = '#0284c7' ;
-ctx.fillRect( -16 , -4 , 16 , 8 );
-ctx.restore();
+                // Dividimos o percurso u in [0, 1] em 4 trechos contínuos:
+                // Trecho A [0.00 -> 0.36]: Estação -> Subida íngreme -> Queda até a entrada do looping
+                // Trecho B [0.36 -> 0.64]: Looping vertical completo (360 graus)
+                // Trecho C [0.64 -> 1.00]: Saída do looping -> Dois morros -> Túnel final
 
-// Corpo e cabeça
-ctx.fillStyle = '#0ea5e9' ;
-ctx.beginPath();
-ctx.arc( 0 , 0 , 18 , 0 , Math . PI * 2 );
-ctx.arc( 0 , - 22 , 11 , 0 , Math . PI * 2 );
-ctx.fill();
+                if (u < 0.36) {
+                    const t = u / 0.36; // 0..1
+                    const x = lerp(startX, loopCenterX, t);
+                    // Perfil de altura: sobe até t=0.45 e desce suavemente até a base do looping
+                    let hNorm = 0;
+                    if (t < 0.48) {
+                        const st = t / 0.48;
+                        hNorm = 0.12 + 0.88 * (0.5 - 0.5 * Math.cos(Math.PI * st));
+                    } else {
+                        const dt = (t - 0.48) / 0.52;
+                        hNorm = 1.0 * (0.5 + 0.5 * Math.cos(Math.PI * dt));
+                    }
+                    const y = baseTrackY - hNorm * maxClimb;
+                    return { x, y };
+                } else if (u <= 0.64) {
+                    const t = (u - 0.36) / 0.28; // 0..1 ao redor do círculo
+                    // Ângulo começa na base (PI/2) e dá uma volta completa anti-horária (-2*PI)
+                    const angle = Math.PI / 2 - t * Math.PI * 2;
+                    // Pequeno deslocamento lateral para dar perspectiva 3D ao looping (não colidir trilhos)
+                    const helicalOffset = (t - 0.5) * loopRadius * 0.42;
+                    const x = loopCenterX + Math.cos(angle) * loopRadius + helicalOffset;
+                    const y = loopCenterY + Math.sin(angle) * loopRadius;
+                    return { x, y };
+                } else {
+                    const t = (u - 0.64) / 0.36; // 0..1
+                    const x = lerp(loopCenterX, endX, t);
+                    // Dois morros (camelbacks) decrescentes após o looping
+                    const envelope = Math.sin(Math.PI * Math.min(t * 1.15, 1));
+                    const wave = Math.pow(Math.sin(t * Math.PI * 2), 2);
+                    const y = baseTrackY - wave * envelope * (maxClimb * 0.58);
+                    return { x, y };
+                }
+            }
 
-// Bico
-ctx.fillStyle = '#facc15' ;
-ctx.beginPath();
-ctx.moveTo( 8 , - 24 );
-ctx.lineTo( 18 , - 21 );
-ctx.lineTo( 8 , - 18 );
-ctx.fill();
+            /**
+             * Constrói uma tabela de amostras equidistantes por comprimento de arco
+             * para que os vagões da montanha-russa mantenham distância exata no looping.
+             */
+            function buildCoasterLUT() {
+                const samples = 900;
+                const raw = [];
+                let totalLen = 0;
 
-// Pés
-ctx.fillStyle = '#f97316' ;
-ctx.fillRect(- 10 , 16 , 7 , 10 );
-ctx.fillRect(3, 16, 7, 10);
-ctx.restore();
-}
+                for (let i = 0; i <= samples; i++) {
+                    const u = i / samples;
+                    const pt = evalCoasterRaw(u);
+                    if (i > 0) {
+                        const dx = pt.x - raw[i - 1].x;
+                        const dy = pt.y - raw[i - 1].y;
+                        totalLen += Math.hypot(dx, dy);
+                    }
+                    raw.push({ u, x: pt.x, y: pt.y, dist: totalLen });
+                }
 
-// Loop principal da animação
-function animar() {
-try {
-if (!pausado) tempo += 0.016;
+                coasterLUT = { points: raw, totalLength: totalLen };
+            }
 
-ctx.save();
-// Mantém a cena proporcional em qualquer resolução de tela
-const escala = Math.max(canvas.width / 800, canvas.height / 500);
-const offsetX = (canvas.width - 800 * escala) / 2;
-const offsetY = (canvas.height - 500 * escala) / 2;
-ctx.translate(offsetX, offsetY);
-ctx.scale(escala, escala);
+            function getCoasterPointAtDistance(targetDist) {
+                const pts = coasterLUT.points;
+                if (!pts || pts.length === 0) return { x: 0, y: 0, angle: 0 };
 
-desenharCenario();
-desenharRodaGigante(520, 210, 95);
-desenharMontanhaRussa();
-desenharCarrossel(680, 415);
-desenharMascote(470, 405);
+                const d = clamp(targetDist, 0, coasterLUT.totalLength);
+                // Busca binária na tabela de distância
+                let low = 0;
+                let high = pts.length - 1;
+                while (low < high - 1) {
+                    const mid = (low + high) >> 1;
+                    if (pts[mid].dist < d) low = mid;
+                    else high = mid;
+                }
 
-ctx.restore()
+                const p1 = pts[low];
+                const p2 = pts[high];
+                const segLen = p2.dist - p1.dist || 1;
+                const frac = (d - p1.dist) / segLen;
+
+                const x = lerp(p1.x, p2.x, frac);
+                const y = lerp(p1.y, p2.y, frac);
+                const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+                return { x, y, angle };
+            }
+
+            function initSceneObjects() {
+                // Estrelas fixas no céu noturno
+                stars = [];
+                const starCount = Math.min(130, Math.floor((width * height) / 9000));
+                for (let i = 0; i < starCount; i++) {
+                    stars.push({
+                        x: Math.random() * width,
+                        y: Math.random() * (height * 0.62),
+                        radius: 0.7 + Math.random() * 1.8,
+                        twinkleSpeed: 1.5 + Math.random() * 3,
+                        twinklePhase: Math.random() * Math.PI * 2
+                    });
+                }
+
+                // Nuvens fofas
+                clouds = [];
+                const cloudCount = Math.max(5, Math.floor(width / 260));
+                for (let i = 0; i < cloudCount; i++) {
+                    clouds.push({
+                        x: (width / cloudCount) * i + Math.random() * 100,
+                        y: height * (0.08 + Math.random() * 0.24),
+                        scale: 0.65 + Math.random() * 0.6,
+                        speed: 8 + Math.random() * 12
+                    });
+                }
+
+                // Balões iniciais espalhados pelo céu
+                balloons = [];
+                for (let i = 0; i < 9; i++) {
+                    spawnBalloon(Math.random() * width, height * (0.2 + Math.random() * 0.55));
+                }
+
+                buildCoasterLUT();
+            }
+
+            function spawnBalloon(x, y) {
+                const color = PALETTE.balloons[Math.floor(Math.random() * PALETTE.balloons.length)];
+                balloons.push({
+                    x: x !== undefined ? x : width * (0.12 + Math.random() * 0.76),
+                    y: y !== undefined ? y : getGroundY() - 30,
+                    radius: 13 + Math.random() * 7,
+                    color,
+                    vy: -(24 + Math.random() * 22),
+                    swayFreq: 1.2 + Math.random() * 1.4,
+                    swayAmp: 12 + Math.random() * 16,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            // =========================================================================
+            // 5. SISTEMA DE FOGOS DE ARTIFÍCIO E PARTÍCULAS
+            // =========================================================================
+            function launchFirework(targetX, targetY) {
+                const startX = width * (0.2 + Math.random() * 0.6);
+                const startY = getGroundY() - 20;
+                const destX = targetX !== undefined ? targetX : width * (0.15 + Math.random() * 0.7);
+                const destY = targetY !== undefined ? targetY : height * (0.12 + Math.random() * 0.34);
+
+                const hue = Math.floor(Math.random() * 360);
+                fireworks.push({
+                    x: startX,
+                    y: startY,
+                    startX,
+                    startY,
+                    destX,
+                    destY,
+                    progress: 0,
+                    duration: 0.65 + Math.random() * 0.3,
+                    hue,
+                    trail: []
+                });
+            }
+
+            function createExplosion(x, y, hue, isBalloonPop = false) {
+                const count = isBalloonPop ? 22 : 68;
+                const secondHue = (hue + 45 + Math.random() * 90) % 360;
+
+                if (!isBalloonPop) {
+                    playFireworkSound();
+                }
+
+                for (let i = 0; i < count; i++) {
+                    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.25;
+                    const speed = isBalloonPop
+                        ? 45 + Math.random() * 110
+                        : 55 + Math.random() * 185;
+                    const useSecond = i % 3 === 0;
+                    particles.push({
+                        x,
+                        y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        alpha: 1,
+                        decay: isBalloonPop ? (1.4 + Math.random() * 0.8) : (0.75 + Math.random() * 0.55),
+                        color: isBalloonPop
+                            ? PALETTE.balloons[Math.floor(Math.random() * PALETTE.balloons.length)]
+                            : `hsl(${useSecond ? secondHue : hue}, 95%, 65%)`,
+                        size: isBalloonPop ? (2.5 + Math.random() * 2.5) : (2 + Math.random() * 2.4),
+                        gravity: isBalloonPop ? 180 : 95
+                    });
+                }
+            }
+
+            // =========================================================================
+            // 6. ATUALIZAÇÃO DA LÓGICA (FÍSICA E TEMPORIZADORES)
+            // =========================================================================
+            function update(dt) {
+                // Transição suave entre Dia (0) e Noite (1)
+                const targetNight = state.isNight ? 1 : 0;
+                state.nightFactor += (targetNight - state.nightFactor) * Math.min(1, dt * 3.2);
+
+                const effectiveDt = dt * state.rideSpeed;
+                state.time += effectiveDt;
+
+                // 1. Rotação da Roda-Gigante
+                state.wheelAngle += 0.28 * effectiveDt;
+
+                // 2. Fase do Carrossel
+                state.carouselPhase += 1.65 * effectiveDt;
+
+                // 3. Física da Montanha-Russa (conservação de energia simplificada)
+                if (coasterLUT.totalLength > 0 && state.rideSpeed > 0) {
+                    const frontPos = getCoasterPointAtDistance(state.coasterDistance);
+                    const groundY = getGroundY();
+                    // Quanto mais baixo o carrinho, maior a velocidade cinética
+                    const heightRatio = clamp((groundY - frontPos.y) / (height * 0.36), 0, 1);
+                    const targetSpeedPx = lerp(width * 0.28, width * 0.13, heightRatio);
+                    state.coasterDistance += targetSpeedPx * effectiveDt;
+
+                    // Reinicia o trem ao atravessar o túnel da direita
+                    const trainLength = 135;
+                    if (state.coasterDistance > coasterLUT.totalLength + trainLength) {
+                        state.coasterDistance = -20;
+                    }
+                }
+
+                // 4. Nuvens deslizando suavemente
+                for (const cloud of clouds) {
+                    cloud.x += cloud.speed * dt;
+                    if (cloud.x > width + 160) {
+                        cloud.x = -160;
+                        cloud.y = height * (0.08 + Math.random() * 0.24);
+                    }
+                }
+
+                // 5. Balões subindo pelo céu
+                if (Math.random() < dt * 0.85 && balloons.length < 18) {
+                    spawnBalloon();
+                }
+                for (let i = balloons.length - 1; i >= 0; i--) {
+                    const b = balloons[i];
+                    b.y += b.vy * dt;
+                    b.phase += b.swayFreq * dt;
+                    if (b.y < -80) {
+                        balloons.splice(i, 1);
+                    }
+                }
+
+                // 6. Fogos de artifício automáticos no Modo Noite
+                if (state.isNight) {
+                    state.autoFireworkTimer -= dt;
+                    if (state.autoFireworkTimer <= 0) {
+                        launchFirework();
+                        state.autoFireworkTimer = 0.85 + Math.random() * 1.35;
+                    }
+                }
+
+                // Atualização dos foguetes em ascensão
+                for (let i = fireworks.length - 1; i >= 0; i--) {
+                    const fw = fireworks[i];
+                    fw.progress += dt / fw.duration;
+                    const t = clamp(fw.progress, 0, 1);
+                    // Curva suave de desaceleração na subida
+                    const ease = 1 - Math.pow(1 - t, 2);
+                    fw.x = lerp(fw.startX, fw.destX, t);
+                    fw.y = lerp(fw.startY, fw.destY, ease);
+                    fw.trail.push({ x: fw.x, y: fw.y, alpha: 1 });
+                    if (fw.trail.length > 10) fw.trail.shift();
+
+                    if (fw.progress >= 1) {
+                        createExplosion(fw.destX, fw.destY, fw.hue, false);
+                        fireworks.splice(i, 1);
+                    }
+                }
+
+                // Atualização das partículas (fogos e confetes de balão)
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += p.gravity * dt;
+                    p.vx *= 0.985;
+                    p.alpha -= p.decay * dt;
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+
+                // Pipocas pulando na máquina da barraca
+                if (Math.random() < effectiveDt * 6) {
+                    popcornPops.push({
+                        offsetX: (Math.random() - 0.5) * 20,
+                        offsetY: 0,
+                        vy: -(28 + Math.random() * 25),
+                        life: 0.65
+                    });
+                }
+                for (let i = popcornPops.length - 1; i >= 0; i--) {
+                    const pop = popcornPops[i];
+                    pop.offsetY += pop.vy * effectiveDt;
+                    pop.vy += 120 * effectiveDt;
+                    pop.life -= effectiveDt;
+                    if (pop.life <= 0) popcornPops.splice(i, 1);
+                }
+            }
+
+            // =========================================================================
+            // 7. RENDERIZAÇÃO DE CADA ELEMENTO DO PARQUE
+            // =========================================================================
+
+            function drawSkyAndCelestials() {
+                const nf = state.nightFactor;
+                const skyGrad = ctx.createLinearGradient(0, 0, 0, getGroundY());
+                // Interpolação entre céu azul vibrante do dia e céu estrelado noturno
+                skyGrad.addColorStop(0, lerpColor([56, 189, 248], [11, 17, 38], nf));
+                skyGrad.addColorStop(0.55, lerpColor([125, 211, 252], [23, 37, 84], nf));
+                skyGrad.addColorStop(1, lerpColor([224, 242, 254], [49, 46, 129], nf));
+
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, width, height);
+
+                // Estrelas (visíveis conforme escurece)
+                if (nf > 0.05) {
+                    ctx.save();
+                    for (const star of stars) {
+                        const twinkle = 0.55 + 0.45 * Math.sin(state.time * star.twinkleSpeed + star.twinklePhase);
+                        ctx.globalAlpha = nf * twinkle;
+                        ctx.fillStyle = '#FFFBEB';
+                        ctx.beginPath();
+                        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // Sol (sobe de dia, desce à noite)
+                const sunX = width * 0.14;
+                const sunY = lerp(height * 0.15, height * 0.65, nf);
+                if (nf < 0.95) {
+                    ctx.save();
+                    ctx.globalAlpha = 1 - nf;
+                    // Halo solar
+                    const sunGlow = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 95);
+                    sunGlow.addColorStop(0, 'rgba(253, 224, 71, 0.95)');
+                    sunGlow.addColorStop(0.45, 'rgba(253, 224, 71, 0.3)');
+                    sunGlow.addColorStop(1, 'rgba(253, 224, 71, 0)');
+                    ctx.fillStyle = sunGlow;
+                    ctx.beginPath();
+                    ctx.arc(sunX, sunY, 95, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Raios giratórios suaves
+                    ctx.translate(sunX, sunY);
+                    ctx.rotate(state.time * 0.12);
+                    ctx.strokeStyle = 'rgba(254, 240, 138, 0.55)';
+                    ctx.lineWidth = 3;
+                    for (let i = 0; i < 12; i++) {
+                        ctx.rotate(Math.PI / 6);
+                        ctx.beginPath();
+                        ctx.moveTo(38, 0);
+                        ctx.lineTo(54, 0);
+                        ctx.stroke();
+                    }
+                    ctx.rotate(-state.time * 0.12);
+
+                    // Disco solar
+                    ctx.fillStyle = '#FACC15';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Lua Crescente (sobe à noite)
+                const moonX = width * 0.85;
+                const moonY = lerp(height * 0.65, height * 0.15, nf);
+                if (nf > 0.05) {
+                    ctx.save();
+                    ctx.globalAlpha = nf;
+                    const moonGlow = ctx.createRadialGradient(moonX, moonY, 8, moonX, moonY, 80);
+                    moonGlow.addColorStop(0, 'rgba(254, 249, 195, 0.55)');
+                    moonGlow.addColorStop(1, 'rgba(254, 249, 195, 0)');
+                    ctx.fillStyle = moonGlow;
+                    ctx.beginPath();
+                    ctx.arc(moonX, moonY, 80, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#FEF08A';
+                    ctx.beginPath();
+                    ctx.arc(moonX, moonY, 26, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Recorte para formar lua crescente
+                    ctx.fillStyle = lerpColor([125, 211, 252], [17, 27, 62], nf);
+                    ctx.beginPath();
+                    ctx.arc(moonX + 10, moonY - 6, 22, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function drawClouds() {
+                const nf = state.nightFactor;
+                const cloudColor = lerpColor([255, 255, 255], [71, 85, 105], nf);
+                const cloudAlpha = lerp(0.9, 0.32, nf);
+
+                ctx.save();
+                ctx.fillStyle = cloudColor;
+                ctx.globalAlpha = cloudAlpha;
+
+                for (const c of clouds) {
+                    ctx.save();
+                    ctx.translate(c.x, c.y);
+                    ctx.scale(c.scale, c.scale);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 28, 0, Math.PI * 2);
+                    ctx.arc(26, -8, 34, 0, Math.PI * 2);
+                    ctx.arc(58, -4, 30, 0, Math.PI * 2);
+                    ctx.arc(82, 6, 22, 0, Math.PI * 2);
+                    ctx.arc(-24, 6, 22, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+
+            function drawBackgroundHillsAndTrees() {
+                const nf = state.nightFactor;
+                const groundY = getGroundY();
+
+                // Colinas distantes
+                ctx.fillStyle = lerpColor([134, 239, 172], [20, 83, 45], nf);
+                ctx.beginPath();
+                ctx.moveTo(0, groundY);
+                for (let x = 0; x <= width; x += 40) {
+                    const hill = Math.sin(x * 0.004 + 0.5) * 42 + Math.cos(x * 0.009) * 20;
+                    ctx.lineTo(x, groundY - 58 - hill);
+                }
+                ctx.lineTo(width, groundY);
+                ctx.closePath();
+                ctx.fill();
+
+                // Colinas intermediárias
+                ctx.fillStyle = lerpColor([74, 222, 128], [22, 101, 52], nf);
+                ctx.beginPath();
+                ctx.moveTo(0, groundY);
+                for (let x = 0; x <= width; x += 35) {
+                    const hill = Math.cos(x * 0.0055) * 28 + Math.sin(x * 0.012) * 14;
+                    ctx.lineTo(x, groundY - 28 - hill);
+                }
+                ctx.lineTo(width, groundY);
+                ctx.closePath();
+                ctx.fill();
+
+                // Árvores estilizadas ao fundo
+                const treePositions = [0.05, 0.13, 0.37, 0.62, 0.89, 0.96];
+                for (let i = 0; i < treePositions.length; i++) {
+                    const tx = width * treePositions[i];
+                    const ty = groundY - 6;
+                    const scale = 0.85 + (i % 3) * 0.18;
+
+                    ctx.save();
+                    ctx.translate(tx, ty);
+                    ctx.scale(scale, scale);
+
+                    // Tronco
+                    ctx.fillStyle = lerpColor([120, 53, 15], [69, 26, 3], nf);
+                    ctx.fillRect(-5, -28, 10, 28);
+
+                    // Copa arredondada em camadas
+                    ctx.fillStyle = lerpColor([34, 197, 94], [15, 76, 40], nf);
+                    ctx.beginPath();
+                    ctx.arc(0, -40, 22, 0, Math.PI * 2);
+                    ctx.arc(-14, -30, 16, 0, Math.PI * 2);
+                    ctx.arc(14, -30, 16, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            /**
+             * Desenha a Montanha-Russa com pilares, trilhos duplos, dormentes e vagões animados.
+             */
+            function drawRollerCoaster() {
+                if (!coasterLUT.points || coasterLUT.points.length === 0) return;
+
+                const nf = state.nightFactor;
+                const groundY = getGroundY();
+                const pts = coasterLUT.points;
+
+                // 1. Pilares de sustentação verticais
+                ctx.save();
+                ctx.strokeStyle = lerpColor([100, 116, 139], [51, 65, 85], nf);
+                ctx.lineWidth = 3;
+                const pillarStep = 34;
+                for (let i = 15; i < pts.length - 15; i += pillarStep) {
+                    const p = pts[i];
+                    // Evita desenhar pilar atravessando o interior superior do looping
+                    if (p.u > 0.41 && p.u < 0.59) continue;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y + 4);
+                    ctx.lineTo(p.x, groundY);
+                    ctx.stroke();
+
+                    // Travessa diagonal decorativa
+                    if (groundY - p.y > 45) {
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x - 6, p.y + 22);
+                        ctx.lineTo(p.x + 6, p.y + 38);
+                        ctx.stroke();
+                        ctx.lineWidth = 3;
+                    }
+                }
+                ctx.restore();
+
+                // 2. Trilhos principais (viga inferior + trilho superior)
+                ctx.save();
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                // Trilho de suporte (azul/roxo vibrante)
+                ctx.strokeStyle = lerpColor([2, 132, 199], [56, 189, 248], nf);
+                ctx.lineWidth = 7;
+                ctx.beginPath();
+                pts.forEach((p, idx) => {
+                    if (idx === 0) ctx.moveTo(p.x, p.y + 4);
+                    else ctx.lineTo(p.x, p.y + 4);
+                });
+                ctx.stroke();
+
+                // Trilho superior de rolamento (vermelho/coral)
+                ctx.strokeStyle = lerpColor([225, 29, 72], [251, 113, 133], nf);
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                pts.forEach((p, idx) => {
+                    if (idx === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                });
+                ctx.stroke();
+
+                // Luzes decorativas ao longo do trilho à noite
+                if (nf > 0.15) {
+                    ctx.globalAlpha = nf;
+                    for (let i = 8; i < pts.length; i += 18) {
+                        const p = pts[i];
+                        const colorIdx = (Math.floor(i / 18) + Math.floor(state.time * 5)) % PALETTE.lights.length;
+                        ctx.fillStyle = PALETTE.lights[colorIdx];
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y + 4, 2.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+                }
+                ctx.restore();
+
+                // 3. Trem da Montanha-Russa (4 vagões articulados)
+                const numCars = 4;
+                const carSpacing = 32;
+                const carColors = ['#FACC15', '#FB7185', '#38BDF8', '#A78BFA'];
+
+                for (let c = numCars - 1; c >= 0; c--) {
+                    const dist = state.coasterDistance - c * carSpacing;
+                    if (dist < -10 || dist > coasterLUT.totalLength + 10) continue;
+
+                    const pose = getCoasterPointAtDistance(dist);
+                    ctx.save();
+                    ctx.translate(pose.x, pose.y);
+                    ctx.rotate(pose.angle);
+
+                    // Passageiros animados (cabecinhas e braços levantados!)
+                    const waveArms = Math.sin(state.time * 8 + c) * 2.5;
+                    ctx.fillStyle = '#FDE68A';
+                    ctx.beginPath();
+                    ctx.arc(-4, -14, 4, 0, Math.PI * 2);
+                    ctx.arc(5, -14, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Braços para o alto
+                    ctx.strokeStyle = '#FDE68A';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-4, -11);
+                    ctx.lineTo(-8, -19 + waveArms);
+                    ctx.moveTo(5, -11);
+                    ctx.lineTo(9, -19 - waveArms);
+                    ctx.stroke();
+
+                    // Corpo do vagão
+                    ctx.fillStyle = carColors[c % carColors.length];
+                    ctx.strokeStyle = '#1E293B';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.roundRect(-13, -11, 26, 11, [4, 6, 2, 2]);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Farol dianteiro no primeiro vagão
+                    if (c === 0) {
+                        ctx.fillStyle = '#FEF08A';
+                        ctx.beginPath();
+                        ctx.arc(13, -6, 2.5, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        if (nf > 0.2) {
+                            const beam = ctx.createLinearGradient(13, -6, 75, -6);
+                            beam.addColorStop(0, `rgba(254, 240, 138, ${0.65 * nf})`);
+                            beam.addColorStop(1, 'rgba(254, 240, 138, 0)');
+                            ctx.fillStyle = beam;
+                            ctx.beginPath();
+                            ctx.moveTo(13, -8);
+                            ctx.lineTo(75, -22);
+                            ctx.lineTo(75, 10);
+                            ctx.lineTo(13, -4);
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                    }
+
+                    // Rodinhas no trilho
+                    ctx.fillStyle = '#0F172A';
+                    ctx.beginPath();
+                    ctx.arc(-8, 1, 3, 0, Math.PI * 2);
+                    ctx.arc(8, 1, 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+
+                // 4. Túneis de entrada e saída nas laterais para acabamento limpo
+                drawCoasterTunnel(width * 0.015, getCoasterPointAtDistance(30).y + 6);
+                drawCoasterTunnel(width * 0.985, getCoasterPointAtDistance(coasterLUT.totalLength - 30).y + 6);
+            }
+
+            function drawCoasterTunnel(x, trackY) {
+                const groundY = getGroundY();
+                const nf = state.nightFactor;
+                ctx.save();
+                ctx.fillStyle = lerpColor([71, 85, 105], [30, 41, 59], nf);
+                ctx.beginPath();
+                ctx.roundRect(x - 24, trackY - 26, 48, groundY - (trackY - 26), [22, 22, 0, 0]);
+                ctx.fill();
+
+                // Abertura escura do túnel
+                ctx.fillStyle = '#090D16';
+                ctx.beginPath();
+                ctx.arc(x, trackY - 4, 16, Math.PI, 0);
+                ctx.lineTo(x + 16, trackY + 12);
+                ctx.lineTo(x - 16, trackY + 12);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            /**
+             * Desenha a Grande Roda-Gigante com estrutura metálica, raios, cabines articuladas e luzes.
+             */
+            function drawFerrisWheel() {
+                const nf = state.nightFactor;
+                const groundY = getGroundY();
+                const centerX = width * 0.23;
+                const radius = clamp(Math.min(width * 0.16, height * 0.23), 78, 165);
+                const centerY = groundY - radius - Math.min(height * 0.08, 52);
+
+                ctx.save();
+
+                // 1. Pernas de sustentação em formato "A"
+                ctx.strokeStyle = lerpColor([51, 65, 85], [148, 163, 184], nf * 0.4);
+                ctx.lineWidth = 7;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(centerX - radius * 0.62, groundY);
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(centerX + radius * 0.62, groundY);
+                // Barra transversal
+                ctx.moveTo(centerX - radius * 0.36, lerp(centerY, groundY, 0.58));
+                ctx.lineTo(centerX + radius * 0.36, lerp(centerY, groundY, 0.58));
+                ctx.stroke();
+
+                // Base de embarque
+                ctx.fillStyle = lerpColor([225, 29, 72], [190, 18, 60], nf);
+                ctx.beginPath();
+                ctx.roundRect(centerX - radius * 0.48, groundY - 12, radius * 0.96, 12, [6, 6, 0, 0]);
+                ctx.fill();
+
+                // 2. Raios e aros giratórios
+                const numCabins = 12;
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(state.wheelAngle);
+
+                // Raios
+                ctx.strokeStyle = lerpColor([248, 250, 252], [226, 232, 240], nf);
+                ctx.lineWidth = 2.5;
+                for (let i = 0; i < numCabins; i++) {
+                    const a = (Math.PI * 2 * i) / numCabins;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(a) * radius, Math.sin(a) * radius);
+                    ctx.stroke();
+                }
+
+                // Aro externo e interno
+                ctx.strokeStyle = '#F43F5E';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#38BDF8';
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * 0.72, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Lâmpadas piscantes ao redor do aro
+                const numLights = 36;
+                for (let i = 0; i < numLights; i++) {
+                    const a = (Math.PI * 2 * i) / numLights;
+                    const lx = Math.cos(a) * radius;
+                    const ly = Math.sin(a) * radius;
+                    const chase = (i + Math.floor(state.time * 6)) % 3 === 0;
+                    const lightColor = PALETTE.lights[i % PALETTE.lights.length];
+
+                    if (nf > 0.15 && chase) {
+                        ctx.fillStyle = lightColor;
+                        ctx.shadowColor = lightColor;
+                        ctx.shadowBlur = 12 * nf;
+                        ctx.beginPath();
+                        ctx.arc(lx, ly, 4.2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    } else {
+                        ctx.fillStyle = nf > 0.2 ? lightColor : '#FFFBEB';
+                        ctx.beginPath();
+                        ctx.arc(lx, ly, 2.6, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                ctx.restore();
+
+                // 3. Cabines coloridas (mantêm-se na vertical pela gravidade)
+                for (let i = 0; i < numCabins; i++) {
+                    const a = state.wheelAngle + (Math.PI * 2 * i) / numCabins;
+                    const cx = centerX + Math.cos(a) * radius;
+                    const cy = centerY + Math.sin(a) * radius;
+                    const cabinColor = PALETTE.cabins[i % PALETTE.cabins.length];
+                    const sway = Math.sin(state.time * 2.2 + i) * 0.06;
+
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate(sway);
+
+                    // Haste de suspensão
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, 10);
+                    ctx.stroke();
+
+                    // Janela iluminada à noite
+                    ctx.fillStyle = nf > 0.25 ? '#FEF08A' : '#E0F2FE';
+                    ctx.fillRect(-9, 10, 18, 8);
+
+                    // Corpo da cabine
+                    ctx.fillStyle = cabinColor;
+                    ctx.beginPath();
+                    ctx.roundRect(-11, 16, 22, 11, [2, 2, 7, 7]);
+                    ctx.fill();
+
+                    // Teto da cabine
+                    ctx.beginPath();
+                    ctx.roundRect(-12, 8, 24, 4, 3);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+
+                // 4. Cubo central brilhante
+                ctx.fillStyle = '#FACC15';
+                ctx.strokeStyle = '#E11D48';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            /**
+             * Desenha o Carrossel Clássico com cúpula listrada, luzes e cavalinhos subindo e descendo.
+             */
+            function drawCarousel() {
+                const nf = state.nightFactor;
+                const groundY = getGroundY();
+                const centerX = width * 0.77;
+                const baseWidth = clamp(width * 0.22, 130, 230);
+                const halfW = baseWidth * 0.5;
+                const roofBaseY = groundY - clamp(height * 0.17, 92, 145);
+                const roofPeakY = roofBaseY - clamp(height * 0.09, 45, 78);
+
+                ctx.save();
+
+                // 1. Plataforma inferior
+                ctx.fillStyle = lerpColor([244, 63, 94], [190, 18, 60], nf);
+                ctx.beginPath();
+                ctx.roundRect(centerX - halfW - 6, groundY - 14, baseWidth + 12, 14, [4, 4, 0, 0]);
+                ctx.fill();
+
+                ctx.fillStyle = '#FACC15';
+                ctx.fillRect(centerX - halfW - 6, groundY - 14, baseWidth + 12, 3);
+
+                // 2. Cavalinhos do fundo (atrás da coluna central)
+                const numHorses = 5;
+                const horseColors = ['#FFFFFF', '#FDE68A', '#F9A8D4', '#BAE6FD', '#DDD6FE'];
+
+                for (let i = 0; i < numHorses; i++) {
+                    const orbitAngle = state.carouselPhase + (Math.PI * 2 * i) / numHorses;
+                    const depth = Math.sin(orbitAngle); // -1 atrás, +1 na frente
+                    if (depth >= 0) continue; // Desenha apenas os de trás agora
+                    drawCarouselHorse(centerX, groundY - 14, roofBaseY, halfW * 0.75, orbitAngle, depth, horseColors[i], i);
+                }
+
+                // 3. Coluna central espelhada e iluminada
+                const colGrad = ctx.createLinearGradient(centerX - 14, 0, centerX + 14, 0);
+                colGrad.addColorStop(0, '#D97706');
+                colGrad.addColorStop(0.5, '#FEF08A');
+                colGrad.addColorStop(1, '#B45309');
+                ctx.fillStyle = colGrad;
+                ctx.fillRect(centerX - 13, roofBaseY, 26, groundY - 14 - roofBaseY);
+
+                // 4. Cavalinhos da frente (na frente da coluna central)
+                for (let i = 0; i < numHorses; i++) {
+                    const orbitAngle = state.carouselPhase + (Math.PI * 2 * i) / numHorses;
+                    const depth = Math.sin(orbitAngle);
+                    if (depth < 0) continue;
+                    drawCarouselHorse(centerX, groundY - 14, roofBaseY, halfW * 0.75, orbitAngle, depth, horseColors[i], i);
+                }
+
+                // 5. Cúpula listrada clássica
+                const stripes = 8;
+                const stripeW = (baseWidth + 16) / stripes;
+                const leftRoofX = centerX - halfW - 8;
+
+                for (let s = 0; s < stripes; s++) {
+                    const x1 = leftRoofX + s * stripeW;
+                    const x2 = x1 + stripeW;
+                    ctx.fillStyle = s % 2 === 0 ? '#E11D48' : '#FFFBEB';
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, roofPeakY);
+                    ctx.lineTo(x1, roofBaseY);
+                    ctx.lineTo(x2, roofBaseY);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Babado decorativo (sanefa) com lâmpadas
+                for (let s = 0; s < stripes; s++) {
+                    const sx = leftRoofX + s * stripeW + stripeW / 2;
+                    ctx.fillStyle = s % 2 === 0 ? '#E11D48' : '#FFFBEB';
+                    ctx.beginPath();
+                    ctx.arc(sx, roofBaseY, stripeW / 2, 0, Math.PI);
+                    ctx.fill();
+
+                    // Lâmpada na borda da cúpula
+                    const blink = (s + Math.floor(state.time * 5)) % 2 === 0;
+                    ctx.fillStyle = nf > 0.2 ? (blink ? '#FEF08A' : '#F59E0B') : '#FDE047';
+                    if (nf > 0.2 && blink) {
+                        ctx.shadowColor = '#FEF08A';
+                        ctx.shadowBlur = 10 * nf;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(sx, roofBaseY + 2, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // Bandeirola no topo da cúpula
+                ctx.strokeStyle = '#F59E0B';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(centerX, roofPeakY);
+                ctx.lineTo(centerX, roofPeakY - 18);
+                ctx.stroke();
+
+                ctx.fillStyle = '#FACC15';
+                ctx.beginPath();
+                ctx.moveTo(centerX, roofPeakY - 18);
+                ctx.lineTo(centerX + 16, roofPeakY - 13 + Math.sin(state.time * 6) * 2);
+                ctx.lineTo(centerX, roofPeakY - 8);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            function drawCarouselHorse(centerX, floorY, ceilingY, orbitRadiusX, orbitAngle, depth, color, index) {
+                const hx = centerX + Math.cos(orbitAngle) * orbitRadiusX;
+                const scale = lerp(0.72, 1.05, (depth + 1) / 2);
+                const dir = -Math.sin(orbitAngle) >= 0 ? 1 : -1; // Direção para onde o cavalo olha
+                const bobY = Math.sin(state.carouselPhase * 2 + index * 1.4) * 11;
+                const hy = lerp(floorY, ceilingY, 0.42) + bobY;
+
+                ctx.save();
+                // Haste metálica vertical do teto ao piso
+                ctx.strokeStyle = '#F59E0B';
+                ctx.lineWidth = 2.2 * scale;
+                ctx.beginPath();
+                ctx.moveTo(hx, ceilingY + 4);
+                ctx.lineTo(hx, floorY);
+                ctx.stroke();
+
+                // Corpo estilizado do cavalinho
+                ctx.translate(hx, hy);
+                ctx.scale(scale * dir, scale);
+
+                // Sela colorida
+                ctx.fillStyle = '#F43F5E';
+                ctx.beginPath();
+                ctx.ellipse(0, -4, 7, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Tronco, pescoço e cabeça
+                ctx.fillStyle = color;
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 1.2;
+
+                ctx.beginPath();
+                ctx.roundRect(-12, -5, 24, 10, 5);
+                ctx.fill();
+                ctx.stroke();
+
+                // Pescoço e focinho
+                ctx.beginPath();
+                ctx.moveTo(7, -3);
+                ctx.lineTo(14, -14);
+                ctx.lineTo(20, -10);
+                ctx.lineTo(12, 1);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Pernas em galope
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(9, 4);
+                ctx.lineTo(15, 13);
+                ctx.moveTo(-9, 4);
+                ctx.lineTo(-14, 13);
+                ctx.stroke();
+
+                // Cauda
+                ctx.strokeStyle = '#F59E0B';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(-12, -2);
+                ctx.quadraticCurveTo(-19, 2, -16, 9);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            /**
+             * Desenha as Barraquinhas (Pipoca e Algodão-Doce) e Bandeirinhas Festivas.
+             */
+            function drawBoothsAndBanners() {
+                const nf = state.nightFactor;
+                const groundY = getGroundY();
+
+                const popcornX = width * 0.43;
+                const cottonX = width * 0.58;
+
+                // Bandeirinhas festivas conectando os postes e barraquinhas
+                drawPennantString(width * 0.30, groundY - 78, popcornX, groundY - 72);
+                drawPennantString(popcornX, groundY - 72, cottonX, groundY - 72);
+                drawPennantString(cottonX, groundY - 72, width * 0.69, groundY - 78);
+
+                // Barraca 1: PIPOCA
+                drawParkBooth(popcornX, groundY, {
+                    label: 'PIPOCA',
+                    primary: '#EF4444',
+                    secondary: '#FFFBEB',
+                    type: 'popcorn',
+                    nf
+                });
+
+                // Barraca 2: ALGODÃO-DOCE
+                drawParkBooth(cottonX, groundY, {
+                    label: 'ALGODÃO',
+                    primary: '#EC4899',
+                    secondary: '#F0F9FF',
+                    type: 'cotton',
+                    nf
+                });
+            }
+
+            function drawPennantString(x1, y1, x2, y2) {
+                ctx.save();
+                const sag = 16 + Math.sin(state.time * 2.5) * 2;
+                ctx.strokeStyle = 'rgba(71, 85, 105, 0.75)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.quadraticCurveTo((x1 + x2) / 2, Math.max(y1, y2) + sag, x2, y2);
+                ctx.stroke();
+
+                const count = 9;
+                for (let i = 1; i < count; i++) {
+                    const t = i / count;
+                    // Ponto na curva quadrática de Bézier
+                    const cx = (x1 + x2) / 2;
+                    const cy = Math.max(y1, y2) + sag;
+                    const bx = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * x2;
+                    const by = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * y2;
+
+                    ctx.fillStyle = PALETTE.flags[i % PALETTE.flags.length];
+                    ctx.beginPath();
+                    ctx.moveTo(bx - 5, by);
+                    ctx.lineTo(bx + 5, by);
+                    ctx.lineTo(bx + Math.sin(state.time * 4 + i) * 1.5, by + 10);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            function drawParkBooth(x, groundY, opts) {
+                const w = 68;
+                const h = 58;
+                const topY = groundY - h;
+
+                ctx.save();
+                ctx.translate(x, groundY);
+
+                // Balcão inferior listrado
+                const stripes = 6;
+                const sw = w / stripes;
+                for (let i = 0; i < stripes; i++) {
+                    ctx.fillStyle = i % 2 === 0 ? opts.primary : opts.secondary;
+                    ctx.fillRect(-w / 2 + i * sw, -26, sw, 26);
+                }
+
+                // Hastes laterais
+                ctx.fillStyle = '#F8FAFC';
+                ctx.fillRect(-w / 2 + 2, -h + 10, 4, h - 36);
+                ctx.fillRect(w / 2 - 6, -h + 10, 4, h - 36);
+
+                // Luz interna acolhedora à noite
+                if (opts.nf > 0.15) {
+                    const glow = ctx.createRadialGradient(0, -38, 4, 0, -38, 34);
+                    glow.addColorStop(0, `rgba(254, 240, 138, ${0.85 * opts.nf})`);
+                    glow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+                    ctx.fillStyle = glow;
+                    ctx.fillRect(-w / 2, -h + 8, w, 34);
+                }
+
+                // Detalhe específico do produto no balcão
+                if (opts.type === 'popcorn') {
+                    // Máquina de pipoca de vidro
+                    ctx.fillStyle = 'rgba(224, 242, 254, 0.75)';
+                    ctx.strokeStyle = '#DC2626';
+                    ctx.lineWidth = 2;
+                    ctx.fillRect(-14, -44, 28, 18);
+                    ctx.strokeRect(-14, -44, 28, 18);
+
+                    // Pipocas pulando lá dentro
+                    ctx.fillStyle = '#FEF08A';
+                    for (const pop of popcornPops) {
+                        ctx.beginPath();
+                        ctx.arc(pop.offsetX, -30 + pop.offsetY * 0.35, 2.3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                } else {
+                    // Cones fofos de algodão-doce expostos
+                    const cottonColors = ['#F472B6', '#38BDF8', '#C084FC'];
+                    for (let c = -1; c <= 1; c++) {
+                        ctx.strokeStyle = '#F8FAFC';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(c * 11, -26);
+                        ctx.lineTo(c * 11, -35);
+                        ctx.stroke();
+
+                        ctx.fillStyle = cottonColors[c + 1];
+                        ctx.beginPath();
+                        ctx.arc(c * 11, -38, 6.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // Toldo superior listrado
+                const awningW = w + 12;
+                const asw = awningW / stripes;
+                for (let i = 0; i < stripes; i++) {
+                    const ax = -awningW / 2 + i * asw;
+                    ctx.fillStyle = i % 2 === 0 ? opts.primary : opts.secondary;
+                    ctx.beginPath();
+                    ctx.roundRect(ax, -h, asw + 0.5, 14, [3, 3, 6, 6]);
+                    ctx.fill();
+                }
+
+                // Plaquinha com o nome em português
+                ctx.fillStyle = '#1E293B';
+                ctx.beginPath();
+                ctx.roundRect(-27, -h - 13, 54, 13, 4);
+                ctx.fill();
+
+                ctx.fillStyle = '#FACC15';
+                ctx.font = 'bold 8px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(opts.label, 0, -h - 6.5);
+
+                ctx.restore();
+            }
+
+            /**
+             * Desenha o chão e o calçadão do parque.
+             */
+            function drawGround() {
+                const nf = state.nightFactor;
+                const groundY = getGroundY();
+
+                // Calçadão principal
+                ctx.fillStyle = lerpColor([254, 243, 199], [51, 65, 85], nf);
+                ctx.fillRect(0, groundY, width, height - groundY);
+
+                // Meio-fio decorativo
+                ctx.fillStyle = lerpColor([251, 191, 36], [30, 41, 59], nf);
+                ctx.fillRect(0, groundY, width, 5);
+
+                // Gramado frontal com arbustos
+                ctx.fillStyle = lerpColor([34, 197, 94], [20, 83, 45], nf);
+                ctx.fillRect(0, groundY + (height - groundY) * 0.52, width, height);
+            }
+
+            /**
+             * Desenha os balões coloridos flutuando pelo céu.
+             */
+            function drawBalloons() {
+                for (const b of balloons) {
+                    const bx = b.x + Math.sin(b.phase) * b.swayAmp;
+                    const by = b.y;
+
+                    ctx.save();
+                    // Barbante ondulado
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+                    ctx.lineWidth = 1.3;
+                    ctx.beginPath();
+                    ctx.moveTo(bx, by + b.radius);
+                    ctx.quadraticCurveTo(
+                        bx + Math.sin(b.phase * 1.5) * 8,
+                        by + b.radius + 18,
+                        bx - Math.sin(b.phase) * 5,
+                        by + b.radius + 36
+                    );
+                    ctx.stroke();
+
+                    // Corpo oval do balão
+                    ctx.fillStyle = b.color;
+                    ctx.beginPath();
+                    ctx.ellipse(bx, by, b.radius * 0.86, b.radius, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Nó na base do balão
+                    ctx.beginPath();
+                    ctx.moveTo(bx - 3, by + b.radius);
+                    ctx.lineTo(bx + 3, by + b.radius);
+                    ctx.lineTo(bx, by + b.radius + 4);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Brilho especular
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+                    ctx.beginPath();
+                    ctx.ellipse(bx - b.radius * 0.3, by - b.radius * 0.32, b.radius * 0.2, b.radius * 0.34, -0.4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+            }
+
+            /**
+             * Desenha os fogos de artifício e partículas brilhantes.
+             */
+            function drawFireworksAndParticles() {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+
+                // Foguetes subindo
+                for (const fw of fireworks) {
+                    for (let i = 0; i < fw.trail.length; i++) {
+                        const pt = fw.trail[i];
+                        const ratio = (i + 1) / fw.trail.length;
+                        ctx.fillStyle = `hsla(${fw.hue}, 100%, 70%, ${ratio * 0.8})`;
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, ratio * 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // Partículas das explosões
+                for (const p of particles) {
+                    ctx.globalAlpha = clamp(p.alpha, 0, 1);
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            // =========================================================================
+            // 8. LOOP PRINCIPAL DE ANIMAÇÃO (60 FPS)
+            // =========================================================================
+            let lastTimestamp = 0;
+
+            function renderFrame(timestamp) {
+                if (!lastTimestamp) lastTimestamp = timestamp;
+                const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
+                lastTimestamp = timestamp;
+
+                update(dt);
+
+                // Ordem de camadas (do fundo para a frente)
+                drawSkyAndCelestials();
+                drawClouds();
+                drawFireworksAndParticles();
+                drawBackgroundHillsAndTrees();
+                drawRollerCoaster();
+                drawFerrisWheel();
+                drawCarousel();
+                drawBoothsAndBanners();
+                drawGround();
+                drawBalloons();
+
+                requestAnimationFrame(renderFrame);
+            }
+
+            // =========================================================================
+            // 9. REDIMENSIONAMENTO E INTERATIVIDADE DO USUÁRIO
+            // =========================================================================
+            function handleResize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                canvas.width = Math.floor(width * dpr);
+                canvas.height = Math.floor(height * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                buildCoasterLUT();
+            }
+
+            function updateThemeUI() {
+                const themeBtn = document.getElementById('themeToggleBtn');
+                const themeIcon = document.getElementById('themeIcon');
+                const themeLabel = document.getElementById('themeLabel');
+                const titleCard = document.getElementById('titleCard');
+                const parkTitle = document.getElementById('parkTitle');
+                const parkSubtitle = document.getElementById('parkSubtitle');
+                const controlsPanel = document.getElementById('controlsPanel');
+                const speedBox = document.getElementById('speedBox');
+                const speedLabelText = document.getElementById('speedLabelText');
+
+                if (state.isNight) {
+                    themeIcon.textContent = '☀️';
+                    themeLabel.textContent = 'Modo Dia';
+                    themeBtn.className = 'flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-slate-900 bg-gradient-to-r from-amber-300 to-yellow-400 hover:brightness-105 shadow-md active:scale-95 transition cursor-pointer';
+
+                    titleCard.classList.replace('bg-white/85', 'bg-slate-900/80');
+                    titleCard.classList.replace('border-white/60', 'border-slate-700/70');
+                    parkTitle.classList.replace('text-slate-800', 'text-white');
+                    parkSubtitle.classList.replace('text-slate-600', 'text-slate-300');
+
+                    controlsPanel.classList.replace('bg-white/88', 'bg-slate-900/80');
+                    controlsPanel.classList.replace('border-white/60', 'border-slate-700/70');
+                    speedBox.classList.replace('bg-slate-100/80', 'bg-slate-800/80');
+                    speedBox.classList.replace('border-slate-200/70', 'border-slate-700/70');
+                    speedLabelText.classList.replace('text-slate-700', 'text-slate-200');
+                } else {
+                    themeIcon.textContent = '🌙';
+                    themeLabel.textContent = 'Modo Noite';
+                    themeBtn.className = 'flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-md active:scale-95 transition cursor-pointer';
+
+                    titleCard.classList.replace('bg-slate-900/80', 'bg-white/85');
+                    titleCard.classList.replace('border-slate-700/70', 'border-white/60');
+                    parkTitle.classList.replace('text-white', 'text-slate-800');
+                    parkSubtitle.classList.replace('text-slate-300', 'text-slate-600');
+
+                    controlsPanel.classList.replace('bg-slate-900/80', 'bg-white/88');
+                    controlsPanel.classList.replace('border-slate-700/70', 'border-white/60');
+                    speedBox.classList.replace('bg-slate-800/80', 'bg-slate-100/80');
+                    speedBox.classList.replace('border-slate-700/70', 'border-slate-200/70');
+                    speedLabelText.classList.replace('text-slate-200', 'text-slate-700');
+                }
+            }
+
+            function bindEvents() {
+                window.addEventListener('resize', handleResize);
+
+                // Alternar Dia / Noite
+                document.getElementById('themeToggleBtn').addEventListener('click', () => {
+                    state.isNight = !state.isNight;
+                    updateThemeUI();
+                    if (state.isNight) {
+                        state.autoFireworkTimer = 0.25;
+                        showToast('🌙 Modo Noite: luzes acesas e fogos no céu!');
+                    } else {
+                        showToast('☀️ Modo Dia ativado!');
+                    }
+                });
+
+                // Botão Lançar Fogos de Artifício
+                document.getElementById('fireworksBtn').addEventListener('click', () => {
+                    initAudio();
+                    // Lança uma salva de 3 fogos coordenados
+                    launchFirework(width * 0.28, height * 0.22);
+                    setTimeout(() => launchFirework(width * 0.52, height * 0.16), 160);
+                    setTimeout(() => launchFirework(width * 0.74, height * 0.24), 320);
+                    showToast('🎆 Salva de fogos lançada!');
+                });
+
+                // Controle deslizante de velocidade
+                const speedSlider = document.getElementById('speedSlider');
+                const speedValue = document.getElementById('speedValue');
+
+                function setRideSpeed(newSpeed) {
+                    state.rideSpeed = clamp(parseFloat(newSpeed), 0, 2.5);
+                    speedSlider.value = state.rideSpeed;
+                    speedValue.textContent = state.rideSpeed === 0 ? 'Pausado' : `${state.rideSpeed.toFixed(1)}x`;
+                }
+
+                speedSlider.addEventListener('input', (e) => {
+                    setRideSpeed(e.target.value);
+                });
+
+                document.querySelectorAll('.speed-preset').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        setRideSpeed(btn.dataset.speed);
+                    });
+                });
+
+                // Alternar Som
+                const soundToggleBtn = document.getElementById('soundToggleBtn');
+                const soundIcon = document.getElementById('soundIcon');
+                soundToggleBtn.addEventListener('click', () => {
+                    state.soundEnabled = !state.soundEnabled;
+                    if (state.soundEnabled) {
+                        initAudio();
+                        soundIcon.textContent = '🔊';
+                        showToast('🔊 Efeitos sonoros ativados');
+                    } else {
+                        soundIcon.textContent = '🔇';
+                        showToast('🔇 Efeitos sonoros desativados');
+                    }
+                });
+
+                // Recolher/expandir painel no mobile
+                const togglePanelBtn = document.getElementById('togglePanelBtn');
+                const controlsPanel = document.getElementById('controlsPanel');
+                togglePanelBtn.addEventListener('click', () => {
+                    controlsPanel.classList.toggle('hidden');
+                });
+
+                // Interação direta no Canvas: estourar balões ou lançar fogos onde clicar/tocar
+                canvas.addEventListener('click', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const clickY = e.clientY - rect.top;
+
+                    // Verifica se clicou em algum balão flutuante
+                    for (let i = balloons.length - 1; i >= 0; i--) {
+                        const b = balloons[i];
+                        const bx = b.x + Math.sin(b.phase) * b.swayAmp;
+                        const dist = Math.hypot(clickX - bx, clickY - b.y);
+                        if (dist <= b.radius * 1.45) {
+                            initAudio();
+                            playPopSound();
+                            createExplosion(bx, b.y, 0, true);
+                            balloons.splice(i, 1);
+                            // Solta um novo balão lá embaixo para manter o céu colorido
+                            spawnBalloon();
+                            return;
+                        }
+                    }
+
+                    // Se clicou na área do céu, lança um fogo de artifício até o ponto clicado
+                    if (clickY < getGroundY() - 30) {
+                        initAudio();
+                        launchFirework(clickX, clickY);
+                    }
+                });
+            }
+
+            // =========================================================================
+            // 10. INICIALIZAÇÃO AO CARREGAR A JANELA
+            // =========================================================================
+            window.addEventListener('load', () => {
+                handleResize();
+                initSceneObjects();
+                bindEvents();
+                requestAnimationFrame(renderFrame);
+            });
+        })();
+    </script>
+</body>
+</html>
